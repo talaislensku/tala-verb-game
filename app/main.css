@@ -1,0 +1,48 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #fff;
+  color: $black;
+  font-family: 'Roboto Slab', serif;
+  font-weight: 300;
+  line-height: 1.4;
+  text-rendering: optimizeLegibility;
+  text-size-adjust: none;
+}
+
+.root {
+  font-size: 16px;
+
+  /* sticky footer */
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content {
+  flex: 1;
+  margin: 30px auto;
+  width: 100%;
+  max-width: 700px;
+  padding: 0 20px;
+}
+
+.headWord {
+  font-weight: 700;
+  font-size: 32px;
+}
+
+.prompt {
+  font-size: 24px;
+  margin-right: 1em;
+}
+
+.inline {
+  display: flex;
+  margin: 2em 0;
+}
