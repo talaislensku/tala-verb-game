@@ -6,7 +6,8 @@ export class AnswerBox extends React.Component {
     super(props)
 
     this.state = {
-      value: ''
+      value: '',
+      keyPresses: 0
     }
   }
 
@@ -21,18 +22,33 @@ export class AnswerBox extends React.Component {
   };
 
   handleKeyPress = (event) => {
+    const { value, keyPresses  } = this.state
+
     if (event.key === 'Enter') {
-      this.props.onEnter(this.state.value)
+      this.props.onEnter(value, keyPresses)
+    } else {
+      this.setState({
+        keyPresses: keyPresses + 1
+      })
     }
   };
 
   reset = () => {
     this.setState({
-      value: ''
+      value: '',
+      keyPresses: 0
     })
   };
 
   render() {
-    return <input type="text" className={styles.input} value={this.state.value} onKeyPress={this.handleKeyPress} onChange={this.handleChange} />
+    return <input
+      type="text"
+      autoComplete="off"
+      autoCorrect="off"
+      autoCapitalize="off"
+      className={styles.input}
+      value={this.state.value}
+      onKeyPress={this.handleKeyPress}
+      onChange={this.handleChange} />
   }
 }
