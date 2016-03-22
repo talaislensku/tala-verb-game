@@ -7,10 +7,11 @@ import axios from 'axios'
 import _ from 'lodash'
 
 const apiUrl = 'http://api.tala.7774bdab.svc.dockerapp.io'
+const numberOfQuestions = 10
 
 const level = {
   name: 'Present tense',
-  words: ['tala', 'fara', 'vera', 'segja', 'fá'],
+  words: ['tala', 'fara', 'vera', 'segja'],
   prompts: {
     'GM-FH-NT-1P-ET': ['ég'],
     'GM-FH-NT-2P-ET': ['þú'],
@@ -23,9 +24,9 @@ const level = {
 
 const otherLevel = {
   name: 'Past participles',
-  words: ['tala', 'fara', 'vera'],
+  words: ['tala', 'fara', 'vera', 'vilja', 'koma'],
   prompts: {
-    'GM-SAGNB': ['ég hef', 'ég get', 'hann getur']
+    'GM-SAGNB': ['ég hef', 'ég get', 'hann getur', 'hún hefur']
   }
 }
 
@@ -44,73 +45,68 @@ export class Main extends React.Component {
     }
   }
 
-  getQuestion(forms) {
-    let [form, ...remainingForms] = _.shuffle(forms)
+  getQuestion(questions) {
+    let [question, ...remainingQuestions] = questions
 
     return {
       question: {
-        form,
-        prompt: _.shuffle(level.prompts[form.grammarTag])[0]
+        ...question,
+        prompt: _.shuffle(level.prompts[question.grammarTag])[0]
       },
-      forms: remainingForms,
+      questions: remainingQuestions
     }
   }
 
-  nextWord() {
-    let id = _.shuffle(level.words)[0] // get random id
+  createLevel(words) {
+    Promise.all(words.map(word => axios.get(`${apiUrl}/find/${word}`)))
+      .then(all => all
+        .map(x => x.data)
+        .map(x => x.filter(y => y.wordClass === 'so'))
+        .map(x => x[0]))
+      .then(words => {
+        let questions = _.flatten(words.map(({headWord, forms}) =>
+          forms
+            .filter(form => supportedTags.includes(form.grammarTag))
+            .map(form => {
+              form.headWord = headWord
+              delete form.tags
+              return form
+            })))
 
-    axios.get(`${apiUrl}/find/${id}`)
-    .then(({data}) => {
-      let word = data.filter(x => x.headWord === id && x.wordClass === 'so')[0]
-
-      if (!word) {
-        throw new Error('Word not found')
-      }
-
-      return word
-    })
-    .then(word => {
-      let headWord = word.headWord
-
-      let forms = word.forms.filter(form =>
-        supportedTags.includes(form.grammarTag))
-
-      this.setState({
-        forms,
-        headWord,
-        isGameOver: false,
-      }, () => this.nextQuestion())
-    })
+        this.setState({
+          questions: _.shuffle(questions).slice(0, numberOfQuestions),
+          isGameOver: false,
+        }, () => this.nextQuestion())
+      })
   }
 
   nextQuestion = () => {
     if (this.state.startTime) {
-      console.log(this.state.question.form, Date.now() - this.state.startTime)
+      console.log(this.state.question.form, this.state.question.grammarTag, Date.now() - this.state.startTime)
     }
 
-    if (this.state.forms.length === 0) {
-      // this.setState({ isGameOver: true })
-      this.nextWord()
+    if (this.state.questions.length === 0) {
+      this.setState({ isGameOver: true })
       return
     }
 
-    let {question, forms} = this.getQuestion(this.state.forms)
+    let {question, questions} = this.getQuestion(this.state.questions)
 
     this.setState({
       question,
-      forms,
+      questions,
       startTime: Date.now()
     })
   };
 
   componentDidMount() {
-    this.nextWord()
+    this.restart()
   }
 
   onAnswer = (answer, keyPresses) => {
-    if (answer === this.state.question.form.form) {
+    if (answer === this.state.question.form) {
 
-      if (keyPresses === this.state.question.form.form.length) {
+      if (keyPresses === this.state.question.form.length) {
         this.setState({ result: 'perfect' })
       } else {
         this.setState({ result: 'correct' })
@@ -129,11 +125,15 @@ export class Main extends React.Component {
   };
 
   restart = () => {
-    this.nextWord()
+    this.createLevel(level.words)
   };
 
   render() {
-    const { forms, headWord, question, result, isGameOver } = this.state
+    const { question, result, isGameOver } = this.state
+
+    if (!question) {
+      return <div />
+    }
 
     return (
       <div className={styles.root}>
@@ -147,12 +147,13 @@ export class Main extends React.Component {
             ) : (
               <div>
                 <div>{level.name}</div>
-                <h1 className={styles.headWord}>{headWord}</h1>
+                <h1 className={styles.headWord}>{question.headWord}</h1>
                 <div className={styles.inline}>
                   { question && <div className={styles.prompt}>{question.prompt}</div> }
                   <AnswerBox ref="answer" onEnter={this.onAnswer} />
                   { result && <div>{result}</div> }
                 </div>
+                { result === 'try again' && <div>{question.form}</div> }
               </div>
             )
           }
