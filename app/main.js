@@ -6,7 +6,7 @@ import { AnswerBox } from './answer-box'
 import axios from 'axios'
 import _ from 'lodash'
 
-const apiUrl = 'http://api.tala.7774bdab.svc.dockerapp.io'
+const apiUrl = 'https://api.tala.is'
 const numberOfQuestions = 10
 
 const level = {

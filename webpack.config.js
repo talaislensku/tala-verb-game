@@ -12,13 +12,14 @@ module.exports = {
     app: [
       'webpack-dev-server/client?http://localhost:8080',
       'webpack/hot/only-dev-server',
-      path.resolve(__dirname, './app/index.js')
+      './app/index.js'
     ]
   },
 
   output: {
-    path: path.resolve(__dirname, 'build'),
+    path: 'build',
     filename: 'bundle.js',
+    publicPath: '/',
   },
 
   module: {
@@ -26,7 +27,7 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        loaders: ['react-hot', 'babel?presets[]=react,presets[]=es2015,presets[]=stage-0'],
+        loaders: ['react-hot', 'babel'],
       }, {
         test: /\.css$/,
         loader: 'style-loader!' + cssModulesLoader
@@ -53,7 +54,7 @@ module.exports = {
     new webpack.NoErrorsPlugin(),
     new HtmlWebpackPlugin({
       title: 'tala.is',
-      template: 'index.dev.html',
+      template: './index.dev.html',
       inject: 'body'
     })
   ],
