@@ -8,7 +8,6 @@ import { flatMap, shuffle } from 'lodash'
 import { compose, prop, head, take, propEq, filter, map } from 'ramda'
 
 const apiUrl = 'https://api.tala.is'
-const numberOfQuestions = 10
 
 const level = {
   name: 'Past tense',
@@ -19,17 +18,17 @@ const level = {
     'GM-FH-ÞT-3P-ET': ['hann', 'hún', 'það'],
     'GM-FH-ÞT-1P-FT': ['við'],
     'GM-FH-ÞT-2P-FT': ['þið'],
-    'GM-FH-ÞT-3P-FT': ['þeir', 'þær', 'þau']
-  }
+    'GM-FH-ÞT-3P-FT': ['þeir', 'þær', 'þau'],
+  },
 }
 
-const otherLevel = {
-  name: 'Past participles',
-  words: ['tala', 'fara', 'vera', 'vilja', 'koma'],
-  prompts: {
-    'GM-SAGNB': ['ég hef', 'ég get', 'hann getur', 'hún hefur']
-  }
-}
+// const otherLevel = {
+//   name: 'Past participles',
+//   words: ['tala', 'fara', 'vera', 'vilja', 'koma'],
+//   prompts: {
+//     'GM-SAGNB': ['ég hef', 'ég get', 'hann getur', 'hún hefur']
+//   }
+// }
 
 const supportedTags = Object.keys(level.prompts)
 
@@ -41,7 +40,7 @@ async function createLevel(words, numberOfQuestions) {
   const all = await lookupWords(words)
   const verbs = map(compose(head, filter(propEq('wordClass', 'so')), prop('data')))(all)
 
-  let questions = flatMap(verbs, ({headWord, forms}) =>
+  const questions = flatMap(verbs, ({ headWord, forms }) =>
     forms
       .filter(form => supportedTags.includes(form.grammarTag))
       .map(form => ({
@@ -57,58 +56,47 @@ function getResult(answer, keyPresses, form) {
   if (answer === form) {
     if (keyPresses === form.length) {
       return 'perfect'
-    } else {
-      return 'correct'
     }
-  } else {
-    return 'try again'
+
+    return 'correct'
   }
+
+  return 'try again'
 }
 
 function getQuestion(questions) {
-  let [question, ...remainingQuestions] = questions
+  const [question, ...remainingQuestions] = questions
 
   return {
     question: {
       ...question,
-      prompt: shuffle(level.prompts[question.grammarTag])[0]
+      prompt: shuffle(level.prompts[question.grammarTag])[0],
     },
-    questions: remainingQuestions
+    questions: remainingQuestions,
   }
 }
 
 function reportResult(...props) {
-  console.log(...props)
+  console.log(...props) // eslint-disable-line no-console
 }
 
 export class Main extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = Main.initialState
-  }
-
   static initialState = {
     result: null,
     isGameOver: false,
   }
 
-  nextQuestion = () => {
-    if (this.state.startTime) {
-      reportResult(this.state.question.form, this.state.question.grammarTag, Date.now() - this.state.startTime)
-    }
+  static defaultProps = {
+    numberOfQuestions: 10,
+  }
 
-    if (this.questions.length === 0) {
-      this.setState({ isGameOver: true })
-      return
-    }
+  static propTypes = {
+    numberOfQuestions: React.PropTypes.number,
+  }
 
-    let {question, questions} = getQuestion(this.questions)
-    this.questions = questions
-
-    this.setState({
-      question,
-      startTime: Date.now()
-    })
+  constructor(props) {
+    super(props)
+    this.state = Main.initialState
   }
 
   componentDidMount() {
@@ -131,9 +119,32 @@ export class Main extends React.Component {
   }
 
   restart = async () => {
-    const questions = await createLevel(level.words, numberOfQuestions)
+    const questions = await createLevel(level.words, this.props.numberOfQuestions)
     this.questions = shuffle(questions)
     this.setState(Main.initialState, () => this.nextQuestion())
+  }
+
+  nextQuestion = () => {
+    if (this.state.startTime) {
+      reportResult(
+        this.state.question.form,
+        this.state.question.grammarTag,
+        Date.now() - this.state.startTime
+      )
+    }
+
+    if (this.questions.length === 0) {
+      this.setState({ isGameOver: true })
+      return
+    }
+
+    const { question, questions } = getQuestion(this.questions)
+    this.questions = questions
+
+    this.setState({
+      question,
+      startTime: Date.now(),
+    })
   }
 
   render() {
@@ -147,22 +158,22 @@ export class Main extends React.Component {
       <div className={styles.root}>
         <div className={styles.content}>
           <Logo />
-          { isGameOver ? (
-              <div>
-                <div>Game over</div>
-                <button onClick={this.restart}>Play again</button>
-              </div>
+          {isGameOver ? (
+            <div>
+              <div>Game over</div>
+              <button onClick={this.restart}>Play again</button>
+            </div>
             ) : (
-              <div>
-                <div>{level.name}</div>
-                <h1 className={styles.headWord}>{question.headWord}</h1>
-                <div className={styles.inline}>
-                  <div className={styles.prompt}>{question.prompt}</div>
-                  <AnswerBox ref="answer" onEnter={this.onAnswer} />
-                  <div>{result}</div>
-                </div>
-                { result === 'try again' && <div>{question.form}</div> }
+            <div>
+              <div>{level.name}</div>
+              <h1 className={styles.headWord}>{question.headWord}</h1>
+              <div className={styles.inline}>
+                <div className={styles.prompt}>{question.prompt}</div>
+                <AnswerBox ref="answer" onEnter={this.onAnswer} />
+                <div>{result}</div>
               </div>
+              {result === 'try again' && <div>{question.form}</div>}
+            </div>
             )
           }
         </div>

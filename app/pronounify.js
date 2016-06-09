@@ -1,4 +1,4 @@
-export default function(grammarTag) {
+export default function (grammarTag) {
   // With personal pronoun attached
   if (grammarTag.includes('FN-NF')) {
     return null
@@ -28,9 +28,7 @@ export default function(grammarTag) {
     if (grammarTag.includes('3P-FT')) {
       return 'þeir / þær / þau'
     }
-  }
-
-  else if (grammarTag.startsWith('OP-MM')) {
+  } else if (grammarTag.startsWith('OP-MM')) {
     if (grammarTag.includes('1P-ET')) {
       return 'mér'
     }
@@ -54,9 +52,7 @@ export default function(grammarTag) {
     if (grammarTag.includes('3P-FT')) {
       return 'þeim'
     }
-  }
-
-  else if (grammarTag.startsWith('OP-GM')) {
+  } else if (grammarTag.startsWith('OP-GM')) {
     if (grammarTag.includes('1P-ET')) {
       return 'mig'
     }
@@ -82,8 +78,5 @@ export default function(grammarTag) {
     }
   }
 
-
-  else {
-    return null
-  }
+  return null
 }
