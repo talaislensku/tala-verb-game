@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rm -rf build && webpack --config webpack.production.config --bail",
     "dev": "webpack-dev-server",
-    "test": "ava .",
+    "test": "ava",
     "deploy": "./deploy.sh",
     "lint": "eslint app"
   },
@@ -34,6 +34,7 @@
     "extract-text-webpack-plugin": "^1.0.1",
     "html-webpack-plugin": "^1.7.0",
     "json-loader": "^0.5.4",
+    "mock-css-modules": "^1.0.0",
     "postcss": "5.0.4",
     "postcss-assets": "^4.0.1",
     "postcss-calc": "^5.2.0",
@@ -57,12 +58,17 @@
     "react-translate": "^3.0.4"
   },
   "ava": {
+    "files": [
+      "app/**/*.test.js"
+    ],
     "source": [
-      "app/**/*.js"
+      "**/*.js"
     ],
     "require": [
-      "babel-register"
+      "babel-register",
+      "./test/mock-css-modules"
     ],
-    "babel": "inherit"
+    "babel": "inherit",
+    "verbose": true
   }
 }

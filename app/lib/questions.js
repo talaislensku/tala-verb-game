@@ -1,23 +1,17 @@
-import axios from 'axios'
 import { flatMap, shuffle } from 'lodash'
-import { compose, prop, head, take, propEq, filter, map } from 'ramda'
+import { compose, head, take, propEq, filter, map } from 'ramda'
 
-const apiUrl = 'https://api.tala.is'
-
-function lookupWords(words) {
-  return Promise.all(words.map(word => axios.get(`${apiUrl}/find/${word}`)))
-}
-
-async function getQuestions({ prompts, words }, numberOfQuestions) {
-  const all = await lookupWords(words)
-  const verbs = map(compose(head, filter(propEq('wordClass', 'so')), prop('data')))(all)
+function getQuestions(all, prompts, numberOfQuestions) {
+  const firstVerb = compose(head, filter(propEq('wordClass', 'so')))
+  const verbs = map(firstVerb, all)
 
   const questions = flatMap(verbs, ({ headWord, forms }) =>
     forms
       .filter(form => Object.keys(prompts).includes(form.grammarTag))
       .map(form => ({
+        form: form.form,
+        grammarTag: form.grammarTag,
         headWord,
-        ...form,
       })
     ))
 

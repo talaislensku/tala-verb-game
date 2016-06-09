@@ -2,6 +2,7 @@ import React from 'react'
 import { shuffle } from 'lodash'
 
 import { getQuestions, getResult, getQuestion } from '../../lib/questions'
+import { lookupWords } from '../../lib/api'
 
 import Logo from '../logo'
 import Footer from '../footer'
@@ -51,7 +52,9 @@ export default class Quiz extends React.Component {
   }
 
   restart = async () => {
-    const questions = await getQuestions(this.props.level, this.props.numberOfQuestions)
+    const { level, numberOfQuestions } = this.props
+    const all = await lookupWords(level.words)
+    const questions = getQuestions(all, level.prompts, numberOfQuestions)
     this.questions = shuffle(questions)
     this.setState(Quiz.initialState, () => this.nextQuestion())
   }
