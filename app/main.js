@@ -4,7 +4,7 @@ import Footer from './footer'
 import styles from './main.css'
 import { AnswerBox } from './answer-box'
 import axios from 'axios'
-import _ from 'lodash'
+import { flatMap, shuffle } from 'lodash'
 import { compose, prop, head, take, propEq, filter, map } from 'ramda'
 
 const apiUrl = 'https://api.tala.is'
@@ -33,54 +33,68 @@ const otherLevel = {
 
 const supportedTags = Object.keys(level.prompts)
 
-export class Main extends React.Component {
+function lookupWords(words) {
+  return Promise.all(words.map(word => axios.get(`${apiUrl}/find/${word}`)))
+}
 
+async function createLevel(words, numberOfQuestions) {
+  const all = await lookupWords(words)
+  const verbs = map(compose(head, filter(propEq('wordClass', 'so')), prop('data')))(all)
+
+  let questions = flatMap(verbs, ({headWord, forms}) =>
+    forms
+      .filter(form => supportedTags.includes(form.grammarTag))
+      .map(form => ({
+        headWord,
+        ...form,
+      })
+    ))
+
+  return take(numberOfQuestions, questions)
+}
+
+function getResult(answer, keyPresses, form) {
+  if (answer === form) {
+    if (keyPresses === form.length) {
+      return 'perfect'
+    } else {
+      return 'correct'
+    }
+  } else {
+    return 'try again'
+  }
+}
+
+function getQuestion(questions) {
+  let [question, ...remainingQuestions] = questions
+
+  return {
+    question: {
+      ...question,
+      prompt: shuffle(level.prompts[question.grammarTag])[0]
+    },
+    questions: remainingQuestions
+  }
+}
+
+function reportResult(...props) {
+  console.log(...props)
+}
+
+export class Main extends React.Component {
   constructor(props) {
     super(props)
-
-    this.state = {
-      id: null,
-      data: null,
-      result: null,
-      isGameOver: false,
-    }
+    this.state = Main.initialState
   }
 
-  getQuestion(questions) {
-    let [question, ...remainingQuestions] = questions
-
-    return {
-      question: {
-        ...question,
-        prompt: _.shuffle(level.prompts[question.grammarTag])[0]
-      },
-      questions: remainingQuestions
-    }
-  }
-
-  lookupWords(words) {
-    return Promise.all(words.map(word => axios.get(`${apiUrl}/find/${word}`)))
-  }
-
-  async createLevel(words) {
-    const all = await this.lookupWords(words)
-    const verbs = map(compose(head, filter(propEq('wordClass', 'so')), prop('data')))(all)
-
-    let questions = _.flatMap(verbs, ({headWord, forms}) =>
-      forms
-        .filter(form => supportedTags.includes(form.grammarTag))
-        .map(form => ({
-          headWord,
-          ...form,
-        })
-      ))
-
-    return questions
+  static initialState = {
+    result: null,
+    isGameOver: false,
   }
 
   nextQuestion = () => {
     if (this.state.startTime) {
-      console.log(this.state.question.form, this.state.question.grammarTag, Date.now() - this.state.startTime)
+      reportResult(this.state.question.form, this.state.question.grammarTag, Date.now() - this.state.startTime)
     }
 
     if (this.questions.length === 0) {
@@ -88,49 +102,39 @@ export class Main extends React.Component {
       return
     }
 
-    let {question, questions} = this.getQuestion(this.questions)
+    let {question, questions} = getQuestion(this.questions)
     this.questions = questions
 
     this.setState({
       question,
       startTime: Date.now()
     })
-  };
+  }
 
   componentDidMount() {
     this.restart()
   }
 
   onAnswer = (answer, keyPresses) => {
-    if (answer === this.state.question.form) {
+    const { form } = this.state.question
+    const result = getResult(answer, keyPresses, form)
 
-      if (keyPresses === this.state.question.form.length) {
-        this.setState({ result: 'perfect' })
-      } else {
-        this.setState({ result: 'correct' })
-      }
-
+    if (answer === form) {
       setTimeout(() => {
         this.refs.answer.reset()
         this.nextQuestion()
-
         this.setState({ result: null })
       }, 1000)
-
-    } else {
-      this.setState({ result: 'try again' })
     }
-  };
+
+    this.setState({ result })
+  }
 
   restart = async () => {
-    const questions = await this.createLevel(level.words)
-
-    this.questions = take(numberOfQuestions, _.shuffle(questions))
-
-    this.setState({
-      isGameOver: false,
-    }, () => this.nextQuestion())
-  };
+    const questions = await createLevel(level.words, numberOfQuestions)
+    this.questions = shuffle(questions)
+    this.setState(Main.initialState, () => this.nextQuestion())
+  }
 
   render() {
     const { question, result, isGameOver } = this.state
@@ -153,9 +157,9 @@ export class Main extends React.Component {
                 <div>{level.name}</div>
                 <h1 className={styles.headWord}>{question.headWord}</h1>
                 <div className={styles.inline}>
-                  { question && <div className={styles.prompt}>{question.prompt}</div> }
+                  <div className={styles.prompt}>{question.prompt}</div>
                   <AnswerBox ref="answer" onEnter={this.onAnswer} />
-                  { result && <div>{result}</div> }
+                  <div>{result}</div>
                 </div>
                 { result === 'try again' && <div>{question.form}</div> }
               </div>
