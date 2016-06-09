@@ -4,9 +4,8 @@ import Footer from '../footer'
 import styles from './index.css'
 import AnswerBox from '../answer-box'
 
-import { level } from '../../levels'
 import { shuffle } from 'lodash'
-import { createLevel, getResult, getQuestion } from '../../lib/questions'
+import { getQuestions, getResult, getQuestion } from '../../lib/questions'
 
 export default class Quiz extends React.Component {
   static initialState = {
@@ -15,9 +14,15 @@ export default class Quiz extends React.Component {
   }
 
   static propTypes = {
-    level: React.PropTypes.array,
+    level: React.PropTypes.object,
     numberOfQuestions: React.PropTypes.number,
     onReport: React.PropTypes.func,
+    answerDelay: React.PropTypes.number,
+  }
+
+  static defaultProps = {
+    answerDelay: 1000, // ms
+    numberOfQuestions: 10,
   }
 
   constructor(props) {
@@ -38,14 +43,14 @@ export default class Quiz extends React.Component {
         this.refs.answer.reset()
         this.nextQuestion()
         this.setState({ result: null })
-      }, 1000)
+      }, this.props.answerDelay)
     }
 
     this.setState({ result })
   }
 
   restart = async () => {
-    const questions = await createLevel(this.props.level, this.props.numberOfQuestions)
+    const questions = await getQuestions(this.props.level, this.props.numberOfQuestions)
     this.questions = shuffle(questions)
     this.setState(Quiz.initialState, () => this.nextQuestion())
   }
@@ -64,7 +69,7 @@ export default class Quiz extends React.Component {
       return
     }
 
-    const { question, questions } = getQuestion(this.questions, level.prompts)
+    const { question, questions } = getQuestion(this.questions, this.props.level.prompts)
     this.questions = questions
 
     this.setState({
@@ -75,6 +80,7 @@ export default class Quiz extends React.Component {
 
   render() {
     const { question, result, isGameOver } = this.state
+    const { level } = this.props
 
     if (!question) {
       return null

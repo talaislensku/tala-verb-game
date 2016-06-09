@@ -1,7 +1,7 @@
 import React from 'react'
 import styles from './index.css'
 
-export class AnswerBox extends React.Component {
+export default class AnswerBox extends React.Component {
   static propTypes = {
     onEnter: React.PropTypes.func.isRequired,
   }
