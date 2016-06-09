@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rm -rf build && webpack --config webpack.production.config --bail",
     "dev": "webpack-dev-server",
-    "test": "npm run test",
+    "test": "ava .",
     "deploy": "./deploy.sh",
     "lint": "eslint app"
   },

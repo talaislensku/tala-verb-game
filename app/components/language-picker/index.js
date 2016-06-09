@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from './language-picker.css'
+import styles from './index.css'
 
 const languagePicker = ({ lang, onChange }) => (
   <div className={styles.root}>

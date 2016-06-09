@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from './answer-box.css'
+import styles from './index.css'
 
 export class AnswerBox extends React.Component {
   static propTypes = {
