@@ -5,20 +5,21 @@ import styles from './main.css'
 import { AnswerBox } from './answer-box'
 import axios from 'axios'
 import _ from 'lodash'
+import { compose, prop, head, take, propEq, filter, map } from 'ramda'
 
 const apiUrl = 'https://api.tala.is'
 const numberOfQuestions = 10
 
 const level = {
-  name: 'Present tense',
+  name: 'Past tense',
   words: ['tala', 'fara', 'vera', 'segja'],
   prompts: {
-    'GM-FH-NT-1P-ET': ['ég'],
-    'GM-FH-NT-2P-ET': ['þú'],
-    'GM-FH-NT-3P-ET': ['hann', 'hún', 'það'],
-    'GM-FH-NT-1P-FT': ['við'],
-    'GM-FH-NT-2P-FT': ['þið'],
-    'GM-FH-NT-3P-FT': ['þeir', 'þær', 'þau']
+    'GM-FH-ÞT-1P-ET': ['ég'],
+    'GM-FH-ÞT-2P-ET': ['þú'],
+    'GM-FH-ÞT-3P-ET': ['hann', 'hún', 'það'],
+    'GM-FH-ÞT-1P-FT': ['við'],
+    'GM-FH-ÞT-2P-FT': ['þið'],
+    'GM-FH-ÞT-3P-FT': ['þeir', 'þær', 'þau']
   }
 }
 
@@ -57,27 +58,24 @@ export class Main extends React.Component {
     }
   }
 
-  createLevel(words) {
-    Promise.all(words.map(word => axios.get(`${apiUrl}/find/${word}`)))
-      .then(all => all
-        .map(x => x.data)
-        .map(x => x.filter(y => y.wordClass === 'so'))
-        .map(x => x[0]))
-      .then(words => {
-        let questions = _.flatten(words.map(({headWord, forms}) =>
-          forms
-            .filter(form => supportedTags.includes(form.grammarTag))
-            .map(form => {
-              form.headWord = headWord
-              delete form.tags
-              return form
-            })))
+  lookupWords(words) {
+    return Promise.all(words.map(word => axios.get(`${apiUrl}/find/${word}`)))
+  }
 
-        this.setState({
-          questions: _.shuffle(questions).slice(0, numberOfQuestions),
-          isGameOver: false,
-        }, () => this.nextQuestion())
-      })
+  async createLevel(words) {
+    const all = await this.lookupWords(words)
+    const verbs = map(compose(head, filter(propEq('wordClass', 'so')), prop('data')))(all)
+
+    let questions = _.flatMap(verbs, ({headWord, forms}) =>
+      forms
+        .filter(form => supportedTags.includes(form.grammarTag))
+        .map(form => ({
+          headWord,
+          ...form,
+        })
+      ))
+
+    return questions
   }
 
   nextQuestion = () => {
@@ -85,16 +83,16 @@ export class Main extends React.Component {
       console.log(this.state.question.form, this.state.question.grammarTag, Date.now() - this.state.startTime)
     }
 
-    if (this.state.questions.length === 0) {
+    if (this.questions.length === 0) {
       this.setState({ isGameOver: true })
       return
     }
 
-    let {question, questions} = this.getQuestion(this.state.questions)
+    let {question, questions} = this.getQuestion(this.questions)
+    this.questions = questions
 
     this.setState({
       question,
-      questions,
       startTime: Date.now()
     })
   };
@@ -124,15 +122,21 @@ export class Main extends React.Component {
     }
   };
 
-  restart = () => {
-    this.createLevel(level.words)
+  restart = async () => {
+    const questions = await this.createLevel(level.words)
+
+    this.questions = take(numberOfQuestions, _.shuffle(questions))
+
+    this.setState({
+      isGameOver: false,
+    }, () => this.nextQuestion())
   };
 
   render() {
     const { question, result, isGameOver } = this.state
 
     if (!question) {
-      return <div />
+      return null
     }
 
     return (
