@@ -1,11 +1,12 @@
 import React from 'react'
+import { shuffle } from 'lodash'
+
+import { getQuestions, getResult, getQuestion } from '../../lib/questions'
+
 import Logo from '../logo'
 import Footer from '../footer'
-import styles from './index.css'
 import AnswerBox from '../answer-box'
-
-import { shuffle } from 'lodash'
-import { getQuestions, getResult, getQuestion } from '../../lib/questions'
+import styles from './index.css'
 
 export default class Quiz extends React.Component {
   static initialState = {
