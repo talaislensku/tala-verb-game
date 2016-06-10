@@ -42,7 +42,6 @@ export default class Quiz extends React.Component {
 
     if (answer === form) {
       setTimeout(() => {
-        this.refs.answer.reset()
         this.nextQuestion()
         this.setState({ result: null })
       }, this.props.answerDelay)
@@ -62,7 +61,7 @@ export default class Quiz extends React.Component {
   nextQuestion = () => {
     if (this.state.startTime) {
       this.props.onReport(
-        this.state.question.form,
+        this.state.question.headWord,
         this.state.question.grammarTag,
         Date.now() - this.state.startTime
       )
@@ -105,7 +104,7 @@ export default class Quiz extends React.Component {
               <h1 className={styles.headWord}>{question.headWord}</h1>
               <div className={styles.inline}>
                 <div className={styles.prompt}>{question.prompt}</div>
-                <AnswerBox ref="answer" onEnter={this.onAnswer} />
+                <AnswerBox answer={question.form} onEnter={this.onAnswer} />
                 <div>{result}</div>
               </div>
               {result === 'try again' && <div>{question.form}</div>}

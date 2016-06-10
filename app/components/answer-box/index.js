@@ -4,6 +4,7 @@ import styles from './index.css'
 export default class AnswerBox extends React.Component {
   static propTypes = {
     onEnter: React.PropTypes.func.isRequired,
+    answer: React.PropTypes.string,
   }
 
   constructor(props) {
@@ -11,32 +12,30 @@ export default class AnswerBox extends React.Component {
 
     this.state = {
       value: '',
-      keyPresses: 0,
+    }
+  }
+
+  componentWillReceiveProps(props) {
+    if (props.answer !== this.props.answer) {
+      this.reset()
     }
   }
 
   handleChange = (event) => {
-    this.setState({
-      value: event.target.value,
-    })
+    this.setState({ value: event.target.value })
   }
 
   handleKeyPress = (event) => {
-    const { value, keyPresses } = this.state
+    const { value } = this.state
 
     if (event.key === 'Enter') {
-      this.props.onEnter(value, keyPresses)
-    } else {
-      this.setState({
-        keyPresses: keyPresses + 1,
-      })
+      this.props.onEnter(value)
     }
   }
 
   reset = () => {
     this.setState({
       value: '',
-      keyPresses: 0,
     })
   }
 
