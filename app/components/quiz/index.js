@@ -104,7 +104,7 @@ export default class Quiz extends React.Component {
               <h1 className={styles.headWord}>{question.headWord}</h1>
               <div className={styles.inline}>
                 <div className={styles.prompt}>{question.prompt}</div>
-                <AnswerBox answer={question.form} onEnter={this.onAnswer} />
+                <AnswerBox questionNumber={this.questions.length} onEnter={this.onAnswer} />
                 <div>{result}</div>
               </div>
               {result === 'try again' && <div>{question.form}</div>}

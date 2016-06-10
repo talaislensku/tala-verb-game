@@ -4,7 +4,7 @@ import styles from './index.css'
 export default class AnswerBox extends React.Component {
   static propTypes = {
     onEnter: React.PropTypes.func.isRequired,
-    answer: React.PropTypes.string,
+    questionNumber: React.PropTypes.number,
   }
 
   constructor(props) {
@@ -16,7 +16,7 @@ export default class AnswerBox extends React.Component {
   }
 
   componentWillReceiveProps(props) {
-    if (props.answer !== this.props.answer) {
+    if (props.questionNumber !== this.props.questionNumber) {
       this.reset()
     }
   }
