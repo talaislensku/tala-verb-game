@@ -18,16 +18,8 @@ function getQuestions(all, prompts, numberOfQuestions) {
   return take(numberOfQuestions, questions)
 }
 
-function getResult(answer, keyPresses, form) {
-  if (answer === form) {
-    if (keyPresses === form.length) {
-      return 'perfect'
-    }
-
-    return 'correct'
-  }
-
-  return 'try again'
+function getScore(answer, form) {
+  return answer === form ? 1 : 0
 }
 
 function getQuestion(questions, prompts) {
@@ -42,4 +34,4 @@ function getQuestion(questions, prompts) {
   }
 }
 
-export { getQuestions, getResult, getQuestion }
+export { getQuestions, getScore, getQuestion }

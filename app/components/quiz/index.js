@@ -1,7 +1,7 @@
 import React from 'react'
 import { shuffle } from 'lodash'
 
-import { getQuestions, getResult, getQuestion } from '../../lib/questions'
+import { getQuestions, getScore, getQuestion } from '../../lib/questions'
 import { lookupWords } from '../../lib/api'
 
 import Logo from '../logo'
@@ -13,6 +13,7 @@ export default class Quiz extends React.Component {
   static initialState = {
     result: null,
     isGameOver: false,
+    hasAnswered: false,
   }
 
   static propTypes = {
@@ -36,18 +37,32 @@ export default class Quiz extends React.Component {
     this.restart()
   }
 
-  onAnswer = (answer, keyPresses) => {
+  onAnswer = (answer) => {
     const { form } = this.state.question
-    const result = getResult(answer, keyPresses, form)
+    const score = getScore(answer, form)
 
-    if (answer === form) {
-      setTimeout(() => {
-        this.nextQuestion()
-        this.setState({ result: null })
-      }, this.props.answerDelay)
+    const result = score === 1 ? 'correct' : 'try again'
+
+    if (score === 1) {
+      this.onCorrectAnswer(score)
     }
 
-    this.setState({ result })
+    this.setState({ result, hasAnswered: true })
+  }
+
+  onCorrectAnswer = (score) => {
+    if (this.state.startTime) {
+      this.props.onReport(
+        this.state.question.headWord,
+        this.state.question.grammarTag,
+        score,
+      )
+    }
+
+    setTimeout(() => {
+      this.nextQuestion()
+      this.setState({ result: null })
+    }, this.props.answerDelay)
   }
 
   restart = async () => {
@@ -59,14 +74,6 @@ export default class Quiz extends React.Component {
   }
 
   nextQuestion = () => {
-    if (this.state.startTime) {
-      this.props.onReport(
-        this.state.question.headWord,
-        this.state.question.grammarTag,
-        Date.now() - this.state.startTime
-      )
-    }
-
     if (this.questions.length === 0) {
       this.setState({ isGameOver: true })
       return
@@ -78,6 +85,7 @@ export default class Quiz extends React.Component {
     this.setState({
       question,
       startTime: Date.now(),
+      hasAnswered: false,
     })
   }
 
