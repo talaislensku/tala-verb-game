@@ -22,15 +22,12 @@ function getScore(answer, form) {
   return answer === form ? 1 : 0
 }
 
-function getQuestion(questions, prompts) {
-  const [question, ...remainingQuestions] = questions
-
+function getQuestion(question, prompts) {
   return {
     question: {
       ...question,
       prompt: shuffle(prompts[question.grammarTag])[0],
     },
-    questions: remainingQuestions,
   }
 }
 

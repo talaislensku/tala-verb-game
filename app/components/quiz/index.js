@@ -14,6 +14,7 @@ export default class Quiz extends React.Component {
     result: null,
     isGameOver: false,
     hasAnswered: false,
+    currentQuestionIndex: -1,
   }
 
   static propTypes = {
@@ -44,20 +45,18 @@ export default class Quiz extends React.Component {
     const result = score === 1 ? 'correct' : 'try again'
 
     if (score === 1) {
-      this.onCorrectAnswer(score)
+      this.onCorrectAnswer(score, this.state.firstAnswer)
     }
 
-    this.setState({ result, hasAnswered: true })
+    this.setState({ result, firstAnswer: false })
   }
 
-  onCorrectAnswer = (score) => {
-    if (this.state.startTime) {
-      this.props.onReport(
-        this.state.question.headWord,
-        this.state.question.grammarTag,
-        score,
-      )
-    }
+  onCorrectAnswer = (score, firstAnswer) => {
+    this.props.onReport(
+      this.state.question.headWord,
+      this.state.question.grammarTag,
+      firstAnswer ? score : 0,
+    )
 
     setTimeout(() => {
       this.nextQuestion()
@@ -74,23 +73,24 @@ export default class Quiz extends React.Component {
   }
 
   nextQuestion = () => {
-    if (this.questions.length === 0) {
+    const nextIndex = this.state.currentQuestionIndex + 1
+
+    if (nextIndex === this.questions.length) {
       this.setState({ isGameOver: true })
       return
     }
 
-    const { question, questions } = getQuestion(this.questions, this.props.level.prompts)
-    this.questions = questions
+    const { question } = getQuestion(this.questions[nextIndex], this.props.level.prompts)
 
     this.setState({
       question,
-      startTime: Date.now(),
-      hasAnswered: false,
+      firstAnswer: true,
+      currentQuestionIndex: nextIndex,
     })
   }
 
   render() {
-    const { question, result, isGameOver } = this.state
+    const { question, result, isGameOver, currentQuestionIndex } = this.state
     const { level } = this.props
 
     if (!question) {
@@ -112,7 +112,8 @@ export default class Quiz extends React.Component {
               <h1 className={styles.headWord}>{question.headWord}</h1>
               <div className={styles.inline}>
                 <div className={styles.prompt}>{question.prompt}</div>
-                <AnswerBox questionNumber={this.questions.length} onEnter={this.onAnswer} />
+                <AnswerBox questionNumber={currentQuestionIndex} onEnter={this.onAnswer} />
+
                 <div>{result}</div>
               </div>
               {result === 'try again' && <div>{question.form}</div>}
