@@ -23,7 +23,7 @@ module.exports = {
     loaders: [
       {
         test: /\.js$/,
-        loader: 'babel?presets[]=react,presets[]=es2015,presets[]=stage-0',
+        loader: 'babel?presets[]=react,presets[]=es2015,presets[]=stage-1',
         exclude: /node_modules/
       }, {
         test: /\.css$/,
@@ -47,6 +47,11 @@ module.exports = {
   ],
 
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify('production'),
+      },
+    }),
     new HtmlWebpackPlugin({
       title: 'tala.is',
       template: 'index.html',
