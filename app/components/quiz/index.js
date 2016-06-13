@@ -52,11 +52,13 @@ export default class Quiz extends React.Component {
   }
 
   onCorrectAnswer = (score, firstAnswer) => {
-    this.props.onReport(
-      this.state.question.headWord,
-      this.state.question.grammarTag,
-      firstAnswer ? score : 0,
-    )
+    const { headWord, grammarTag } = this.state.question
+
+    this.props.onReport({
+      headWord,
+      grammarTag,
+      score: firstAnswer ? score : 0,
+    })
 
     setTimeout(() => {
       this.nextQuestion()

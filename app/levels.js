@@ -103,14 +103,14 @@ export const commonVerbs = [
 
 export const level = {
   name: 'Past tense',
-  words: commonVerbs,
+  words: ['tala', 'fara', 'vera'],
   prompts: {
     'GM-FH-ÞT-1P-ET': ['ég'],
     'GM-FH-ÞT-2P-ET': ['þú'],
     'GM-FH-ÞT-3P-ET': ['hann', 'hún', 'það'],
-    // 'GM-FH-ÞT-1P-FT': ['við'],
-    // 'GM-FH-ÞT-2P-FT': ['þið'],
-    // 'GM-FH-ÞT-3P-FT': ['þeir', 'þær', 'þau'],
+    'GM-FH-ÞT-1P-FT': ['við'],
+    'GM-FH-ÞT-2P-FT': ['þið'],
+    'GM-FH-ÞT-3P-FT': ['þeir', 'þær', 'þau'],
   },
 }
 
